@@ -49,5 +49,6 @@ struct Instrument : public FunctionPass {
   Instrument() : FunctionPass(ID) {}
 
   bool runOnFunction(Function &F) override;
+  void createDseFunction(const char *name, std::vector<Type *> Params, std::vector<Value *> Args, Function &F, Instruction &I, bool before = true);
 };
 } // namespace instrument

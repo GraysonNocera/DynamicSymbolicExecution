@@ -84,6 +84,7 @@ extern "C" void __DSE_Branch__(int BID, int RID, int B) {
   MemoryTy &Mem = SI.getMemory();
   Address Addr(RID);
   z3::expr SE = Mem.at(Addr);
+  // B could be 1 if there is a condition, else 0?
   z3::expr Cond =
       B ? SI.getContext().bool_val(true) : SI.getContext().bool_val(false);
   SI.getPathCondition().push_back(std::make_pair(BID, SE == Cond));

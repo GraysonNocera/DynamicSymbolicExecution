@@ -122,14 +122,19 @@ bool Instrument::runOnFunction(Function &F) {
     {
       outs() << "branch inst\n";
       Value *condition = BI->getCondition();
+      int id = getRegisterID(condition);
+      Constant *idVal = ConstantInt::get(i32Type, APInt(32, id));
+
+      int branchId = getRegisterID(branchId);
+      Constant *branchIdVal = ConstantInt::get(i32Type, APInt(32, branchId));
 
       // TODO: do we need to add the operands here?
       // branch condition takes three integers has input, but what are they?
       std::vector<Type *> Params(3, Type::getInt32Ty(M->getContext()));
       std::vector<Value *> Args(3);
       // TODO: FIX THIS, IDK WHAT THE INTEGERS ARE RIGHT NOW FOR BRANCH FUNCTION
-      Args[0] = condition;
-      Args[1] = condition;
+      Args[0] = branchIdVal;
+      Args[1] = idVal;
       Args[2] = condition;
       Instrument::createDseFunction(DSEBranchFunctionName, Params, Args, F, *I);
     }

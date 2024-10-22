@@ -125,7 +125,7 @@ bool Instrument::runOnFunction(Function &F) {
       int id = getRegisterID(condition);
       Constant *idVal = ConstantInt::get(i32Type, APInt(32, id));
 
-      int branchId = getRegisterID(branchId);
+      int branchId = getRegisterID(I);
       Constant *branchIdVal = ConstantInt::get(i32Type, APInt(32, branchId));
 
       // TODO: do we need to add the operands here?

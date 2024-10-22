@@ -5,6 +5,8 @@
 
 #include "SymbolicInterpreter.h"
 
+using namespace llvm;
+
 extern SymbolicInterpreter SI;
 
 /*
@@ -12,13 +14,14 @@ extern SymbolicInterpreter SI;
  */
 extern "C" void __DSE_Alloca__(int R, int *Ptr) {
   Address X(R);
-  z3::expr Z = SI.getContext().int_symbol(*Ptr);
+  z3::expr Z = SI.getContext().int_val(*Ptr);
   SI.getMemory().insert(std::make_pair(X, Z));
 }
 
 extern "C" void __DSE_Store__(int *X) {
   Address A(X);
-  z3::expr E = SI.getStack().pop();
+  z3::expr E = SI.getStack().top();
+  SI.getStack().pop();
   SI.getMemory().insert(std::make_pair(A, E));
 }
 
@@ -35,10 +38,12 @@ extern "C" void __DSE_ICmp__(int R, int Op) {
 
   Address A(R);
   // TODO: may need to switch these around?
-  z3::expr O2 = SI.getStack().pop();
-  z3::expr O1 = SI.getStack().pop();
+  z3::expr O2 = SI.getStack().top();
+  SI.getStack().pop();
+  z3::expr O1 = SI.getStack().top();
+  SI.getStack().pop();
   
-  z3::expr Result;
+  z3::expr Result(SI.getContext()); 
   switch (Op) {
   case CmpInst::ICMP_EQ:
     Result = O1 == O2;
@@ -62,18 +67,23 @@ extern "C" void __DSE_ICmp__(int R, int Op) {
   case CmpInst::ICMP_ULT:
     Result = O1 < O2;
     break;
+  default:
+    Result = O1 + O2;
+    break;
   }
 
-  SI.getMemory().insert(std::make_pair(A, R))
+  SI.getMemory().insert(std::make_pair(A, Result));
 }
 
 extern "C" void __DSE_BinOp__(int R, int Op) {
   Address A(R);
   // TODO: may need to switch these around?
-  z3::expr O2 = SI.getStack().pop();
-  z3::expr O1 = SI.getStack().pop();
+  z3::expr O2 = SI.getStack().top();
+  SI.getStack().pop();
+  z3::expr O1 = SI.getStack().top();
+  SI.getStack().pop();
   
-  z3::expr Result;
+  z3::expr Result(SI.getContext());
   switch (Op) {
   case Instruction::Add:
     Result = O1 + O2;
@@ -90,5 +100,5 @@ extern "C" void __DSE_BinOp__(int R, int Op) {
     break;
   }
 
-  SI.getMemory().insert(std::make_pair(A, R))
+  SI.getMemory().insert(std::make_pair(A, Result));
 }

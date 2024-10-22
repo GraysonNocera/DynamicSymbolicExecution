@@ -3,4 +3,6 @@
 /*
  * Implement your search strategy.
  */
-void searchStrategy(z3::expr_vector &OldVec) { /* Add your code here */ }
+void searchStrategy(z3::expr_vector &OldVec) {
+    z3::expr Z = OldVec.pop_back()
+}

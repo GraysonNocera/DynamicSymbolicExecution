@@ -13,10 +13,13 @@ void Instrument::createDseFunction(const char *name, std::vector<Type *> Params,
     Call = CallInst::Create(f, Args, "", &I);
   } else {
     Instruction *Next = I.getNextNode();
+    outs() << "next instruction\n";
+    Next->dump();
     Call = CallInst::Create(f, Args, "", Next);
   }
   Call->setCallingConv(CallingConv::C);
-  Call->setTailCall(true);
+  Call->dump();
+  // Call->setTailCall(true);
 }
 
 /*
@@ -24,6 +27,8 @@ void Instrument::createDseFunction(const char *name, std::vector<Type *> Params,
  */
 bool Instrument::runOnFunction(Function &F) {
   Module *M = F.getParent();
+
+  F.dump();
 
   // insert "call void __DSE_Init__();"
   // before the first command
@@ -35,6 +40,8 @@ bool Instrument::runOnFunction(Function &F) {
 
   for (inst_iterator Iter = inst_begin(F), E = inst_end(F); Iter != E; ++Iter) {
     Instruction *I = &(*Iter);
+    outs() << "next iterated instruction: ";
+    I->dump();
     Type *i32Type = IntegerType::getInt32Ty(M->getContext());
     // do something for each instruction
     if (BinaryOperator *BO = dyn_cast<BinaryOperator>(I))
@@ -121,18 +128,27 @@ bool Instrument::runOnFunction(Function &F) {
     else if (BranchInst *BI = dyn_cast<BranchInst>(I))
     {
       outs() << "branch inst\n";
+
+      if (!BI->isConditional()) {
+        continue;
+      }
+
       Value *condition = BI->getCondition();
       int id = getRegisterID(condition);
+      outs() << "here\n";
       Constant *idVal = ConstantInt::get(i32Type, APInt(32, id));
+      idVal->dump();
 
       int branchId = getRegisterID(I);
       Constant *branchIdVal = ConstantInt::get(i32Type, APInt(32, branchId));
+      branchIdVal->dump();
+      outs() << "here\n";
 
-      // TODO: do we need to add the operands here?
-      // branch condition takes three integers has input, but what are they?
-      std::vector<Type *> Params(3, Type::getInt32Ty(M->getContext()));
+      std::vector<Type *> Params(3);
       std::vector<Value *> Args(3);
-      // TODO: FIX THIS, IDK WHAT THE INTEGERS ARE RIGHT NOW FOR BRANCH FUNCTION
+      Params[0] = Type::getInt32Ty(M->getContext());
+      Params[1] = Type::getInt32Ty(M->getContext());
+      Params[2] = Type::getInt1Ty(M->getContext());
       Args[0] = branchIdVal;
       Args[1] = idVal;
       Args[2] = condition;
@@ -140,14 +156,11 @@ bool Instrument::runOnFunction(Function &F) {
     }
     else if (CallInst *CI = dyn_cast<CallInst>(I))
     {
-      // we are promised that this never happens
-      if (!CI->getFunctionType()->getReturnType()->isIntegerTy())
-      {
-        return true;
-      }
+      outs() << "call inst\n";
     }
     else if (AllocaInst *AI = dyn_cast<AllocaInst>(I))
     {
+      outs() << "alloca inst\n";
       int id = getRegisterID(I);
       Type *i32Type = IntegerType::getInt32Ty(M->getContext());
       Constant *idVal = ConstantInt::get(i32Type, APInt(32, id));
@@ -158,10 +171,11 @@ bool Instrument::runOnFunction(Function &F) {
       Params[1] = PointerType::getUnqual(IntegerType::getInt32Ty(M->getContext()));
       Args[0] = idVal;
       Args[1] = AI;
-      Instrument::createDseFunction(DSEAllocaFunctionName, Params, Args, F, *I);
+      Instrument::createDseFunction(DSEAllocaFunctionName, Params, Args, F, *I, false);
     }
     else if (LoadInst *LI = dyn_cast<LoadInst>(I))
     {
+      outs() << "load inst\n";
       Value *FromPtr = LI->getPointerOperand();
       int id = getRegisterID(LI);
       Type *i32Type = IntegerType::getInt32Ty(M->getContext());
@@ -178,20 +192,25 @@ bool Instrument::runOnFunction(Function &F) {
     }
     else if (StoreInst *SI = dyn_cast<StoreInst>(I))
     {
+      outs() << "store inst\n";
       // for a store, setup:
       Value *Ptr = SI->getPointerOperand(); // index 1
       Value *Val = SI->getValueOperand(); // index 0
       Ptr->dump();
       Val->dump();
 
+      std::vector<Type *> ParamsConstReg(1);
+      std::vector<Value *> ArgsConstReg(1);
       // setup register or const for value operand
       if (ConstantInt *i = dyn_cast<ConstantInt>(Val)) {
-        Args[0] = i;
-        Instrument::createDseFunction(DSEConstFunctionName, Params, Args, F, *I);
+        ParamsConstReg[0] = IntegerType::getInt32Ty(M->getContext());
+        ArgsConstReg[0] = i;
+        Instrument::createDseFunction(DSEConstFunctionName, ParamsConstReg, ArgsConstReg, F, *I);
       } else {
+        ParamsConstReg[0] = IntegerType::getInt32Ty(M->getContext());
         Constant *idVal = ConstantInt::get(i32Type, APInt(32, getRegisterID(Val)));
-        Args[0] = idVal;
-        Instrument::createDseFunction(DSERegisterFunctionName, Params, Args, F, *I);
+        ArgsConstReg[0] = idVal;
+        Instrument::createDseFunction(DSERegisterFunctionName, ParamsConstReg, ArgsConstReg, F, *I);
       }
 
       std::vector<Type *> Params(1);
@@ -199,6 +218,7 @@ bool Instrument::runOnFunction(Function &F) {
       Params[0] = PointerType::get(IntegerType::getInt32Ty(M->getContext()), SI->getPointerAddressSpace());
       Args[0] = Ptr;
       Instrument::createDseFunction(DSEStoreFunctionName, Params, Args, F, *I);
+      outs() << "created store func\n";
     }
   }
 

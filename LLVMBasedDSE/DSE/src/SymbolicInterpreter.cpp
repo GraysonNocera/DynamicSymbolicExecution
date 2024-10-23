@@ -13,6 +13,7 @@ std::ostream &operator<<(std::ostream &OS, const Address &A) {
 }
 
 int SymbolicInterpreter::NewInput(int *Ptr, int ID) {
+  printf("new input\n");
   int Ret = 0;
   if (Inputs.find(ID) != Inputs.end()) {
     Ret = Inputs[ID];
@@ -25,6 +26,7 @@ int SymbolicInterpreter::NewInput(int *Ptr, int ID) {
   z3::expr SE = Ctx.int_const(InputName.c_str());
   Mem.insert(std::make_pair(X, SE));
   NumOfInputs++;
+  printf("finishing new input\n");
   return Ret;
 }
 

@@ -76,6 +76,7 @@ int main(int argc, char **argv) {
       std::cout << "Crashing input found (" << Iter << " iters)" << std::endl;
       break;
     }
+    std::cout << "RET: " << Ret << std::endl;
     if (stat(FormulaFile, &Buffer)) {
       std::cerr << FormulaFile << " not found" << std::endl;
       return 1;

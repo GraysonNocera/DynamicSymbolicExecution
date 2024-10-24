@@ -13,7 +13,6 @@ void Instrument::createDseFunction(const char *name, std::vector<Type *> Params,
     Call = CallInst::Create(f, Args, "", &I);
   } else {
     Instruction *Next = I.getNextNode();
-    outs() << "next instruction\n";
     Next->dump();
     Call = CallInst::Create(f, Args, "", Next);
   }
@@ -86,7 +85,6 @@ bool Instrument::runOnFunction(Function &F) {
     {
       outs() << "Cast int\n";
       Value *op1 = CastI->getOperand(0);
-      outs() << "Nothing to do here?\n";
     }
     else if (CmpInst *CmpI = dyn_cast<CmpInst>(I))
     {
@@ -135,14 +133,12 @@ bool Instrument::runOnFunction(Function &F) {
 
       Value *condition = BI->getCondition();
       int id = getRegisterID(condition);
-      outs() << "here\n";
       Constant *idVal = ConstantInt::get(i32Type, APInt(32, id));
       idVal->dump();
 
-      int branchId = getRegisterID(I);
+      int branchId = getBranchID(I);
       Constant *branchIdVal = ConstantInt::get(i32Type, APInt(32, branchId));
       branchIdVal->dump();
-      outs() << "here\n";
 
       std::vector<Type *> Params(3);
       std::vector<Value *> Args(3);
@@ -218,9 +214,11 @@ bool Instrument::runOnFunction(Function &F) {
       Params[0] = PointerType::get(IntegerType::getInt32Ty(M->getContext()), SI->getPointerAddressSpace());
       Args[0] = Ptr;
       Instrument::createDseFunction(DSEStoreFunctionName, Params, Args, F, *I);
-      outs() << "created store func\n";
     }
   }
+
+  outs() << "final function\n";
+  F.dump();
 
   return true;
 }

@@ -1,5 +1,5 @@
-; ModuleID = 'simple0.ll'
-source_filename = "simple0.c"
+; ModuleID = 'branch2.ll'
+source_filename = "branch2.c"
 target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128"
 target triple = "x86_64-pc-linux-gnu"
 
@@ -19,37 +19,56 @@ entry:
   call void @__DSE_Store__(i32* %retval)
   store i32 0, i32* %retval, align 4
   call void @__DSE_Input__(i32* %x, i32 0)
+  call void @__DSE_Input__(i32* %y, i32 1)
+  call void @__DSE_Input__(i32* %z, i32 2)
   call void @__DSE_Load__(i32 4, i32* %x)
   %0 = load i32, i32* %x, align 4
-  call void @__DSE_Register__(i32 4)
-  call void @__DSE_Store__(i32* %y)
-  store i32 %0, i32* %y, align 4
   call void @__DSE_Load__(i32 5, i32* %y)
   %1 = load i32, i32* %y, align 4
+  call void @__DSE_Register__(i32 4)
   call void @__DSE_Register__(i32 5)
-  call void @__DSE_Const__(i32 1024)
-  call void @__DSE_ICmp__(i32 6, i32 32)
-  %cmp = icmp eq i32 %1, 1024
-  call void @__DSE_Branch__(i32 0, i32 6, i1 %cmp)
-  br i1 %cmp, label %if.then, label %if.end
+  call void @__DSE_ICmp__(i32 6, i32 38)
+  %cmp = icmp sgt i32 %0, %1
+  call void @__DSE_Branch__(i32 7, i32 6, i1 %cmp)
+  br i1 %cmp, label %land.lhs.true, label %if.end
 
-if.then:                                          ; preds = %entry
-  call void @__DSE_Load__(i32 7, i32* %y)
+land.lhs.true:                                    ; preds = %entry
+  call void @__DSE_Load__(i32 8, i32* %y)
   %2 = load i32, i32* %y, align 4
-  call void @__DSE_Register__(i32 7)
-  call void @__DSE_Const__(i32 1024)
-  call void @__DSE_BinOp__(i32 8, i32 15)
-  %sub = sub nsw i32 %2, 1024
-  call void @__DSE_Const__(i32 4)
+  call void @__DSE_Load__(i32 9, i32* %z)
+  %3 = load i32, i32* %z, align 4
   call void @__DSE_Register__(i32 8)
-  call void @__DSE_BinOp__(i32 9, i32 20)
-  %div = sdiv i32 4, %sub
   call void @__DSE_Register__(i32 9)
-  call void @__DSE_Store__(i32* %z)
-  store i32 %div, i32* %z, align 4
+  call void @__DSE_ICmp__(i32 10, i32 38)
+  %cmp1 = icmp sgt i32 %2, %3
+  call void @__DSE_Branch__(i32 11, i32 10, i1 %cmp1)
+  br i1 %cmp1, label %land.lhs.true2, label %if.end
+
+land.lhs.true2:                                   ; preds = %land.lhs.true
+  call void @__DSE_Load__(i32 12, i32* %z)
+  %4 = load i32, i32* %z, align 4
+  call void @__DSE_Register__(i32 12)
+  call void @__DSE_Const__(i32 0)
+  call void @__DSE_ICmp__(i32 13, i32 32)
+  %cmp3 = icmp eq i32 %4, 0
+  call void @__DSE_Branch__(i32 14, i32 13, i1 %cmp3)
+  br i1 %cmp3, label %if.then, label %if.end
+
+if.then:                                          ; preds = %land.lhs.true2
+  call void @__DSE_Load__(i32 15, i32* %x)
+  %5 = load i32, i32* %x, align 4
+  call void @__DSE_Load__(i32 16, i32* %z)
+  %6 = load i32, i32* %z, align 4
+  call void @__DSE_Register__(i32 15)
+  call void @__DSE_Register__(i32 16)
+  call void @__DSE_BinOp__(i32 17, i32 20)
+  %div = sdiv i32 %5, %6
+  call void @__DSE_Register__(i32 17)
+  call void @__DSE_Store__(i32* %x)
+  store i32 %div, i32* %x, align 4
   br label %if.end
 
-if.end:                                           ; preds = %if.then, %entry
+if.end:                                           ; preds = %if.then, %land.lhs.true2, %land.lhs.true, %entry
   ret i32 0
 }
 

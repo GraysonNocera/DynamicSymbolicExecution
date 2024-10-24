@@ -3,6 +3,18 @@
 #include <ctime>
 #include <fstream>
 
+// Function to print out the std::map<Address, z3::expr>
+void printMapSI(const std::map<Address, z3::expr>& m) {
+    for (const auto& pair : m) {
+        std::cout << pair.first << " => " << pair.second.to_string() << std::endl;
+    }
+}
+void print_map_si(const std::map<int, int>& myMap) {
+    for (const auto& pair : myMap) {
+        std::cout << "Key: " << pair.first << ", Value: " << pair.second << std::endl;
+    }
+}
+
 std::ostream &operator<<(std::ostream &OS, const Address &A) {
   if (A.Type == A.Memory) {
     OS << A.Addr;
@@ -13,11 +25,13 @@ std::ostream &operator<<(std::ostream &OS, const Address &A) {
 }
 
 int SymbolicInterpreter::NewInput(int *Ptr, int ID) {
-  printf("new input\n");
+  std::cout << "NEW INPUT\n";
   int Ret = 0;
   if (Inputs.find(ID) != Inputs.end()) {
     Ret = Inputs[ID];
+    std::cout << "found Ret = " << Ret << std::endl;
   } else {
+    std::cout << "assigning random value\n";
     Ret = std::rand();
     Inputs[ID] = Ret;
   }
@@ -25,8 +39,8 @@ int SymbolicInterpreter::NewInput(int *Ptr, int ID) {
   std::string InputName = "X" + std::to_string(NumOfInputs);
   z3::expr SE = Ctx.int_const(InputName.c_str());
   Mem.insert(std::make_pair(X, SE));
+  printMapSI(Mem);
   NumOfInputs++;
-  printf("finishing new input\n");
   return Ret;
 }
 
@@ -53,6 +67,7 @@ void print(std::ostream &OS) {
 }
 
 extern "C" void __DSE_Exit__() {
+  printf("at exit function\n");
   z3::solver Solver(SI.getContext());
   std::ofstream Branch(BranchFile);
   for (auto &E : SI.getPathCondition()) {
@@ -67,6 +82,7 @@ extern "C" void __DSE_Exit__() {
 }
 
 extern "C" void __DSE_Init__() {
+  std::cout << "INIT\n";
   std::srand(std::time(nullptr));
   std::string Line;
   std::ifstream Input(InputFile);
@@ -78,11 +94,13 @@ extern "C" void __DSE_Init__() {
     }
   }
   std::atexit(__DSE_Exit__);
+  std::cout << "registered exit\n";
 }
 
 extern "C" void __DSE_Input__(int *X, int ID) { *X = (int)SI.NewInput(X, ID); }
 
 extern "C" void __DSE_Branch__(int BID, int RID, int B) {
+  std::cout << "BID, RID, B: " << BID << " " << RID << " " << B << " " << std::endl;
   MemoryTy &Mem = SI.getMemory();
   Address Addr(RID);
   z3::expr SE = Mem.at(Addr);
@@ -90,6 +108,8 @@ extern "C" void __DSE_Branch__(int BID, int RID, int B) {
   z3::expr Cond =
       B ? SI.getContext().bool_val(true) : SI.getContext().bool_val(false);
   SI.getPathCondition().push_back(std::make_pair(BID, SE == Cond));
+  std::cout << "after branch condition" << std::endl;
+  printMapSI(Mem);
 }
 
 extern "C" void __DSE_Const__(int X) {

@@ -29,37 +29,37 @@ entry:
   call void @__DSE_Register__(i32 5)
   call void @__DSE_ICmp__(i32 6, i32 32)
   %cmp = icmp eq i32 %0, %1
-  call void @__DSE_Branch__(i32 7, i32 6, i1 %cmp)
+  call void @__DSE_Branch__(i32 0, i32 6, i1 %cmp)
   br i1 %cmp, label %land.lhs.true, label %if.end
 
 land.lhs.true:                                    ; preds = %entry
-  call void @__DSE_Load__(i32 8, i32* %y)
+  call void @__DSE_Load__(i32 7, i32* %y)
   %2 = load i32, i32* %y, align 4
-  call void @__DSE_Load__(i32 9, i32* %z)
+  call void @__DSE_Load__(i32 8, i32* %z)
   %3 = load i32, i32* %z, align 4
+  call void @__DSE_Register__(i32 7)
   call void @__DSE_Register__(i32 8)
-  call void @__DSE_Register__(i32 9)
-  call void @__DSE_ICmp__(i32 10, i32 32)
+  call void @__DSE_ICmp__(i32 9, i32 32)
   %cmp1 = icmp eq i32 %2, %3
-  call void @__DSE_Branch__(i32 11, i32 10, i1 %cmp1)
+  call void @__DSE_Branch__(i32 1, i32 9, i1 %cmp1)
   br i1 %cmp1, label %if.then, label %if.end
 
 if.then:                                          ; preds = %land.lhs.true
-  call void @__DSE_Load__(i32 12, i32* %x)
+  call void @__DSE_Load__(i32 10, i32* %x)
   %4 = load i32, i32* %x, align 4
-  call void @__DSE_Load__(i32 13, i32* %y)
+  call void @__DSE_Load__(i32 11, i32* %y)
   %5 = load i32, i32* %y, align 4
-  call void @__DSE_Load__(i32 14, i32* %z)
+  call void @__DSE_Load__(i32 12, i32* %z)
   %6 = load i32, i32* %z, align 4
-  call void @__DSE_Register__(i32 13)
-  call void @__DSE_Register__(i32 14)
-  call void @__DSE_BinOp__(i32 15, i32 15)
-  %sub = sub nsw i32 %5, %6
+  call void @__DSE_Register__(i32 11)
   call void @__DSE_Register__(i32 12)
-  call void @__DSE_Register__(i32 15)
-  call void @__DSE_BinOp__(i32 16, i32 20)
+  call void @__DSE_BinOp__(i32 13, i32 15)
+  %sub = sub nsw i32 %5, %6
+  call void @__DSE_Register__(i32 10)
+  call void @__DSE_Register__(i32 13)
+  call void @__DSE_BinOp__(i32 14, i32 20)
   %div = sdiv i32 %4, %sub
-  call void @__DSE_Register__(i32 16)
+  call void @__DSE_Register__(i32 14)
   call void @__DSE_Store__(i32* %x)
   store i32 %div, i32* %x, align 4
   br label %if.end

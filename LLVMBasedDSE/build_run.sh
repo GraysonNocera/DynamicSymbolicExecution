@@ -14,5 +14,5 @@ cd test
 clang -emit-llvm -S -fno-discard-value-names -c $1.c
 opt -load ../../build/DSE/libInstrumentPass.so -Instrument -S $1.ll -o $1.instrumented.ll
 clang -o $1 -L../../build/DSE -lruntime $1.instrumented.ll
-../../build/DSE/dse ./$1 $2
-# timeout $3 ../../build/DSE/dse ./$1
+# ../../build/DSE/dse ./$1 $2
+timeout $2 ../../build/DSE/dse ./$1

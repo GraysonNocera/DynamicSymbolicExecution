@@ -6,19 +6,31 @@ target triple = "x86_64-pc-linux-gnu"
 ; Function Attrs: noinline nounwind optnone uwtable
 define dso_local i32 @main() #0 {
 entry:
+  %retval = alloca i32, align 4
   %x = alloca i32, align 4
   %y = alloca i32, align 4
   %z = alloca i32, align 4
+  store i32 0, i32* %retval, align 4
   call void @__DSE_Input__(i32* %x, i32 0)
   call void @__DSE_Input__(i32* %y, i32 1)
   call void @__DSE_Input__(i32* %z, i32 2)
-  %0 = load i32, i32* %x, align 4
-  %1 = load i32, i32* %y, align 4
-  %add = add nsw i32 %0, %1
-  %2 = load i32, i32* %z, align 4
-  %div = sdiv i32 %add, %2
+  %0 = load i32, i32* %z, align 4
+  %cmp = icmp eq i32 %0, 0
+  br i1 %cmp, label %if.then, label %if.end
+
+if.then:                                          ; preds = %entry
+  %1 = load i32, i32* %x, align 4
+  %2 = load i32, i32* %y, align 4
+  %add = add nsw i32 %1, %2
+  %3 = load i32, i32* %z, align 4
+  %add1 = add nsw i32 %3, 1
+  %div = sdiv i32 %add, %add1
   store i32 %div, i32* %z, align 4
-  ret i32 0
+  br label %if.end
+
+if.end:                                           ; preds = %if.then, %entry
+  %4 = load i32, i32* %retval, align 4
+  ret i32 %4
 }
 
 declare dso_local void @__DSE_Input__(i32*, i32) #1

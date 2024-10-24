@@ -7,5 +7,7 @@ int main(void) {
     DSE_Input(y);
     int z;
     DSE_Input(z);
-    z = (x + y) / z;
+    if (z == 0) {
+        z = (x + y) / (z + 1);
+    }
 }
